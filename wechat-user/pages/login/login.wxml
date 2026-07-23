@@ -1,0 +1,155 @@
+<view class="login-page">
+  <!-- 返回按钮 -->
+  <view class="back-btn" bindtap="goBack">
+    <text class="back-icon">←</text>
+  </view>
+
+  <!-- 顶部装饰 -->
+  <view class="header-bg">
+    <view class="bg-circle bg-circle-1"></view>
+    <view class="bg-circle bg-circle-2"></view>
+  </view>
+
+  <!-- Logo 区域 -->
+  <view class="logo-area">
+    <view class="logo-wrapper">
+      <view class="logo-box">
+        <view class="logo-inner"></view>
+      </view>
+      <view class="logo-glow"></view>
+    </view>
+    <text class="app-name">新能源充电站</text>
+    <text class="app-desc">智能充电 · 绿色出行</text>
+  </view>
+
+  <!-- 登录/注册卡片 -->
+  <view class="form-card">
+    <!-- Tab 切换 -->
+    <view class="tab-bar">
+      <view class="tab-item {{mode === 'login' ? 'tab-active' : ''}}" bindtap="switchMode" data-mode="login">
+        <text>登录</text>
+        <view class="tab-line" wx:if="{{mode === 'login'}}"></view>
+      </view>
+      <view class="tab-item {{mode === 'register' ? 'tab-active' : ''}}" bindtap="switchMode" data-mode="register">
+        <text>注册</text>
+        <view class="tab-line" wx:if="{{mode === 'register'}}"></view>
+      </view>
+    </view>
+
+    <!-- 手机号 -->
+    <view class="input-group {{focusField === 'phone' ? 'input-focus' : ''}}">
+      <view class="input-icon">📱</view>
+      <input
+        class="input"
+        type="number"
+        placeholder="请输入手机号"
+        maxlength="11"
+        value="{{phone}}"
+        bindinput="onPhoneInput"
+        bindfocus="onFocus"
+        bindblur="onBlur"
+        data-field="phone"
+      />
+      <view class="input-clear" wx:if="{{phone}}" bindtap="clearPhone">
+        <text class="icon-clear">✕</text>
+      </view>
+    </view>
+
+    <!-- 密码 -->
+    <view class="input-group {{focusField === 'password' ? 'input-focus' : ''}}">
+      <view class="input-icon">🔒</view>
+      <input
+        class="input"
+        type="{{showPassword ? 'text' : 'password'}}"
+        placeholder="请输入密码"
+        maxlength="20"
+        value="{{password}}"
+        bindinput="onPasswordInput"
+        bindfocus="onFocus"
+        bindblur="onBlur"
+        data-field="password"
+      />
+      <view class="input-eye" bindtap="togglePassword">
+        <text>{{showPassword ? '👁' : '🙈'}}</text>
+      </view>
+    </view>
+
+    <!-- 确认密码（仅注册） -->
+    <view class="input-group {{focusField === 'confirmPassword' ? 'input-focus' : ''}} input-group-extra"
+          wx:if="{{mode === 'register'}}">
+      <view class="input-icon">🔒</view>
+      <input
+        class="input"
+        type="{{showPassword ? 'text' : 'password'}}"
+        placeholder="请再次输入密码"
+        maxlength="20"
+        value="{{confirmPassword}}"
+        bindinput="onConfirmPasswordInput"
+        bindfocus="onFocus"
+        bindblur="onBlur"
+        data-field="confirmPassword"
+      />
+    </view>
+
+    <!-- 昵称（仅注册） -->
+    <view class="input-group {{focusField === 'nickname' ? 'input-focus' : ''}} input-group-extra"
+          wx:if="{{mode === 'register'}}">
+      <view class="input-icon">😊</view>
+      <input
+        class="input"
+        placeholder="请输入昵称（选填）"
+        maxlength="12"
+        value="{{nickname}}"
+        bindinput="onNicknameInput"
+        bindfocus="onFocus"
+        bindblur="onBlur"
+        data-field="nickname"
+      />
+    </view>
+
+    <!-- 主按钮 -->
+    <button class="login-btn" bindtap="handleSubmit" loading="{{loading}}" disabled="{{loading}}">
+      <text wx:if="{{!loading}}">{{mode === 'login' ? '登 录' : '注 册'}}</text>
+      <text wx:else>{{mode === 'login' ? '登录中...' : '注册中...'}}</text>
+    </button>
+
+    <!-- 快捷登录 -->
+    <view class="divider">
+      <view class="divider-line"></view>
+      <text class="divider-text">其他登录方式</text>
+      <view class="divider-line"></view>
+    </view>
+
+    <view class="quick-login">
+      <view class="quick-btn" bindtap="wxLogin">
+        <view class="wx-icon">
+          <text>微</text>
+        </view>
+        <text class="quick-label">微信一键登录</text>
+      </view>
+    </view>
+  </view>
+
+  <!-- 协议 -->
+  <view class="agreement-area">
+    <view class="agreement-check" bindtap="toggleAgree">
+      <view class="checkbox {{agreed ? 'checked' : ''}}">
+        <text wx:if="{{agreed}}">✓</text>
+      </view>
+      <text class="agree-text">我已阅读并同意</text>
+    </view>
+    <view class="agreement-links">
+      <text class="link" bindtap="openAgreement">《用户协议》</text>
+      <text class="and-text">和</text>
+      <text class="link" bindtap="openPrivacy">《隐私政策》</text>
+    </view>
+  </view>
+
+  <view class="footer-tip">
+    <text>{{mode === 'login' ? '还没有账号？' : '已有账号？'}}
+      <text class="footer-link" bindtap="switchMode" data-mode="{{mode === 'login' ? 'register' : 'login'}}">
+        {{mode === 'login' ? '立即注册' : '返回登录'}}
+      </text>
+    </text>
+  </view>
+</view>

@@ -1,0 +1,90 @@
+<view class="search-page">
+  <!-- 搜索头部 -->
+  <view class="search-header">
+    <view class="search-box">
+      <text class="search-icon">🔍</text>
+      <input
+        class="search-input"
+        placeholder="搜索充电站名称/地址"
+        value="{{keyword}}"
+        focus="{{true}}"
+        confirm-type="search"
+        bindinput="onInput"
+        bindconfirm="onSearch"
+        placeholder-class="placeholder"
+      />
+      <view class="clear-btn" wx:if="{{keyword}}" bindtap="clearKeyword">
+        <text class="clear-icon">✕</text>
+      </view>
+    </view>
+    <text class="cancel-btn" bindtap="goBack">取消</text>
+  </view>
+
+  <!-- 搜索历史 -->
+  <view class="history-section" wx:if="{{!keyword && history.length > 0}}">
+    <view class="section-title">
+      <text>搜索历史</text>
+      <text class="clear-history" bindtap="clearHistory">清空</text>
+    </view>
+    <view class="history-list">
+      <view
+        class="history-item"
+        wx:for="{{history}}"
+        wx:key="*this"
+        bindtap="onHistoryTap"
+        data-item="{{item}}"
+      >
+        <text class="history-icon">🕐</text>
+        <text class="history-text">{{item}}</text>
+      </view>
+    </view>
+  </view>
+
+  <!-- 搜索结果 -->
+  <view class="result-section" wx:if="{{keyword || searching || stations.length > 0}}">
+    <view class="result-header" wx:if="{{stations.length > 0}}">
+      <text class="result-title">搜索结果</text>
+      <text class="result-count">共 {{stations.length}} 个</text>
+    </view>
+
+    <scroll-view scroll-y class="result-scroll">
+      <view
+        class="station-card"
+        wx:for="{{stations}}"
+        wx:key="id"
+        bindtap="goStation"
+        data-id="{{item.id}}"
+      >
+        <view class="station-main">
+          <view class="station-header-row">
+            <text class="station-name">{{item.name}}</text>
+            <view class="station-status {{item.status === 1 ? 'status-open' : 'status-closed'}}">
+              {{item.status === 1 ? '营业中' : '已关闭'}}
+            </view>
+          </view>
+          <text class="station-address">{{item.address || '暂无地址'}}</text>
+          <view class="station-tags">
+            <text class="tag tag-primary">{{item.type === 1 ? '直流快充' : '交流慢充'}}</text>
+            <text class="tag tag-success" wx:if="{{item.availablePorts > 0}}">空闲 {{item.availablePorts}}/{{item.totalPorts}}</text>
+            <text class="tag tag-warning" wx:else>已满</text>
+          </view>
+          <view class="station-price">
+            <text class="price-value">¥{{item.price || '0.00'}}</text>
+            <text class="price-unit">/度</text>
+          </view>
+        </view>
+        <view class="station-distance" wx:if="{{item.distance}}">
+          <text class="distance-value">{{item.distance}}</text>
+          <text class="distance-unit">km</text>
+        </view>
+      </view>
+
+      <!-- 空状态 -->
+      <view class="empty-state" wx:if="{{!searching && keyword && stations.length === 0}}">
+        <view class="empty-icon">🔍</view>
+        <text class="empty-title">未找到相关充电站</text>
+        <text class="empty-desc">换个关键词试试</text>
+      </view>
+    </scroll-view>
+  </view>
+</view>

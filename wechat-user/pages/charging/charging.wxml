@@ -1,0 +1,52 @@
+<view class="charging-page">
+  <!-- 加载中 -->
+  <view class="loading-mask" wx:if="{{loading}}">
+    <view class="loading-text">正在识别充电桩...</view>
+  </view>
+
+  <!-- 充电动画 -->
+  <view class="charging-visual">
+    <view class="circle-bg">
+      <view class="circle-progress" style="transform: rotate({{progress * 3.6}}deg);">
+        <view class="progress-fill"></view>
+      </view>
+      <view class="circle-center">
+        <text class="charging-icon">⚡</text>
+        <text class="charging-text">充电中</text>
+      </view>
+    </view>
+  </view>
+
+  <!-- 充电信息 -->
+  <view class="info-card">
+    <view class="info-row">
+      <text class="info-label">站点</text>
+      <text class="info-value">{{stationName}}</text>
+    </view>
+    <view class="info-row">
+      <text class="info-label">充电桩</text>
+      <text class="info-value">{{chargerCode}}</text>
+    </view>
+    <view class="info-row">
+      <text class="info-label">单价</text>
+      <text class="info-value">{{price}} 元/kWh</text>
+    </view>
+    <view class="info-row">
+      <text class="info-label">开始时间</text>
+      <text class="info-value">{{startTime}}</text>
+    </view>
+    <view class="info-row">
+      <text class="info-label">已充电量</text>
+      <text class="info-value highlight">{{energy}} kWh</text>
+    </view>
+    <view class="info-row">
+      <text class="info-label">预计费用</text>
+      <text class="info-value cost">¥{{cost}}</text>
+    </view>
+  </view>
+
+  <!-- 底部按钮 -->
+  <view class="bottom-bar">
+    <button class="stop-btn" bindtap="stopCharge" disabled="{{loading}}">结束充电</button>
+  </view>
+</view>

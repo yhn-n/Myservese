@@ -1,0 +1,9 @@
+<view class="detail-page" wx:if="{{notice}}">
+  <view class="notice-header">
+    <text class="notice-title">{{notice.title}}</text>
+    <text class="notice-time">{{notice.createTime}}</text>
+  </view>
+  <view class="notice-body">
+    <text class="notice-content">{{notice.content}}</text>
+  </view>
+</view>

@@ -1,0 +1,604 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>充电站管理平台</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="/css/halo.css" />
+  <style>
+    body { display: flex; min-height: 100vh; }
+
+    /* Sidebar */
+    .sidebar {
+      width: 240px; min-height: 100vh; background: var(--color-surface);
+      border-right: 1px solid var(--color-border); display: flex; flex-direction: column;
+      position: fixed; top: 0; left: 0; z-index: 10;
+    }
+    .sidebar-brand { padding: 20px 24px; border-bottom: 1px solid var(--color-border); display: flex; align-items: center; gap: 10px; }
+    .sidebar-brand .brand-icon {
+      width: 32px; height: 32px; border-radius: var(--radius-md);
+      background: var(--color-primary); display: flex; align-items: center; justify-content: center;
+      color: #fff; font-size: 16px; font-weight: 700;
+    }
+    .sidebar-brand span { font-family: var(--font-display); font-weight: 600; font-size: 1rem; color: var(--color-text-primary); }
+    .sidebar-nav { flex: 1; padding: 12px; display: flex; flex-direction: column; gap: 2px; }
+    .nav-item {
+      display: flex; align-items: center; gap: 10px; padding: 10px 12px;
+      border-radius: var(--radius-md); color: var(--color-text-secondary);
+      font-size: 0.875rem; cursor: pointer; transition: all var(--motion-base) var(--easing-standard);
+      text-decoration: none; border: none; background: none; width: 100%; text-align: left;
+    }
+    .nav-item:hover { background: var(--color-elevated); color: var(--color-text-primary); }
+    .nav-item.active { background: var(--color-primary-soft); color: var(--color-primary); font-weight: 500; }
+    .nav-item svg { width: 18px; height: 18px; flex-shrink: 0; }
+    .sidebar-footer { padding: 16px; border-top: 1px solid var(--color-border); }
+
+    /* Main content */
+    .main { flex: 1; margin-left: 240px; display: flex; flex-direction: column; }
+    .topbar {
+      height: 56px; border-bottom: 1px solid var(--color-border); display: flex;
+      align-items: center; justify-content: space-between; padding: 0 32px;
+      background: rgba(10, 11, 15, 0.8); backdrop-filter: blur(8px); position: sticky; top: 0; z-index: 5;
+    }
+    .topbar-title { font-size: 0.9375rem; font-weight: 600; color: var(--color-text-primary); }
+    .topbar-right { display: flex; align-items: center; gap: 12px; }
+    .content { flex: 1; padding: 24px 32px; }
+
+    /* Table */
+    .table-wrap { overflow-x: auto; }
+    table { width: 100%; border-collapse: collapse; font-size: 0.875rem; }
+    th {
+      text-align: left; padding: 12px 16px; font-weight: 500; font-size: 0.75rem;
+      text-transform: uppercase; letter-spacing: 0.08em; color: var(--color-text-muted);
+      border-bottom: 1px solid var(--color-border); white-space: nowrap;
+    }
+    td {
+      padding: 12px 16px; border-bottom: 1px solid var(--color-border);
+      color: var(--color-text-primary); vertical-align: middle;
+    }
+    tr:hover td { background: rgba(255,255,255,0.02); }
+
+    /* Tags */
+    .tag {
+      display: inline-flex; align-items: center; padding: 2px 10px;
+      border-radius: var(--radius-full); font-size: 0.75rem; font-weight: 500;
+    }
+    .tag-success { background: var(--color-success-soft); color: var(--color-success); }
+    .tag-danger { background: var(--color-danger-soft); color: var(--color-danger); }
+    .tag-warning { background: var(--color-warning-soft); color: var(--color-warning); }
+    .tag-info { background: var(--color-info-soft); color: var(--color-info); }
+    .tag-primary { background: var(--color-primary-soft); color: var(--color-primary); }
+
+    /* Search bar */
+    .search-bar { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; margin-bottom: 20px; }
+    .search-bar .input { max-width: 220px; height: 36px; }
+    .search-bar .select { max-width: 160px; height: 36px; }
+
+    /* Pagination */
+    .pagination { display: flex; align-items: center; justify-content: flex-end; gap: 8px; margin-top: 16px; }
+    .pagination .btn { min-width: 32px; height: 32px; padding: 0 8px; font-size: 0.8125rem; }
+    .pagination .page-info { font-size: 0.8125rem; color: var(--color-text-secondary); }
+
+    /* Modal */
+    .modal-overlay {
+      display: none; position: fixed; inset: 0; background: var(--color-overlay);
+      z-index: 100; align-items: center; justify-content: center;
+    }
+    .modal-overlay.show { display: flex; }
+    .modal {
+      background: var(--color-surface); border: 1px solid var(--color-border);
+      border-radius: var(--radius-lg); width: 560px; max-width: 90vw; max-height: 85vh;
+      overflow-y: auto; box-shadow: var(--shadow-lg);
+    }
+    .modal-header {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 20px 24px; border-bottom: 1px solid var(--color-border);
+    }
+    .modal-header h3 { font-size: 1rem; font-weight: 600; color: var(--color-text-primary); margin: 0; }
+    .modal-body { padding: 24px; }
+    .modal-footer { display: flex; justify-content: flex-end; gap: 8px; padding: 16px 24px; border-top: 1px solid var(--color-border); }
+
+    /* Form grid */
+    .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+    .form-grid .field { grid-column: span 2; }
+    .form-grid .field-half { grid-column: span 1; }
+
+    /* Empty state */
+    .empty-state { text-align: center; padding: 60px 20px; color: var(--color-text-muted); }
+
+    /* Responsive */
+    @media (max-width: 768px) {
+      .sidebar { display: none; }
+      .main { margin-left: 0; }
+      .form-grid { grid-template-columns: 1fr; }
+      .form-grid .field, .form-grid .field-half { grid-column: span 1; }
+    }
+  </style>
+</head>
+<body>
+  <!-- Sidebar -->
+  <aside class="sidebar">
+    <div class="sidebar-brand">
+      <div class="brand-icon">⚡</div>
+      <span>充电站管理</span>
+    </div>
+    <nav class="sidebar-nav">
+      <button class="nav-item active" onclick="navigate('station')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+        站点管理
+      </button>
+      <button class="nav-item" onclick="navigate('charger')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>
+        充电桩管理
+      </button>
+      <button class="nav-item" onclick="navigate('user')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+        用户管理
+      </button>
+      <button class="nav-item" onclick="navigate('order')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+        订单管理
+      </button>
+      <button class="nav-item" onclick="navigate('feedback')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+        故障反馈
+      </button>
+      <button class="nav-item" onclick="navigate('notice')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75"><path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 01-3.46 0"/></svg>
+        公告管理
+      </button>
+    </nav>
+    <div class="sidebar-footer">
+      <button class="nav-item" onclick="logout()" style="color: var(--color-danger);">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75"><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+        退出登录
+      </button>
+    </div>
+  </aside>
+
+  <!-- Main -->
+  <div class="main">
+    <header class="topbar">
+      <div class="topbar-title" id="pageTitle">站点管理</div>
+      <div class="topbar-right">
+        <span class="t-body-sm t-secondary" id="adminName">管理员</span>
+      </div>
+    </header>
+    <div class="content" id="content"></div>
+  </div>
+
+  <!-- Modal -->
+  <div class="modal-overlay" id="modalOverlay" onclick="if(event.target===this)closeModal()">
+    <div class="modal">
+      <div class="modal-header">
+        <h3 id="modalTitle">新增</h3>
+        <button class="btn btn-tertiary btn-sm btn-icon" onclick="closeModal()">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+        </button>
+      </div>
+      <div class="modal-body" id="modalBody"></div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" onclick="closeModal()">取消</button>
+        <button class="btn btn-primary" id="modalSubmit" onclick="submitForm()">确定</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const API = '';
+    let currentPage = 'station';
+    let page = { current: 1, size: 10, total: 0 };
+    let searchParams = {};
+    let editingId = null;
+    let dataList = [];
+
+    // ===== Navigation =====
+    function navigate(name) {
+      currentPage = name;
+      page.current = 1;
+      searchParams = {};
+      editingId = null;
+      document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
+      event.currentTarget.classList.add('active');
+      document.getElementById('pageTitle').textContent = getPageTitle(name);
+      renderPage();
+    }
+
+    function getPageTitle(name) {
+      const map = { station:'站点管理', charger:'充电桩管理', user:'用户管理', order:'订单管理', feedback:'故障反馈', notice:'公告管理' };
+      return map[name] || name;
+    }
+
+    // ===== Render =====
+    function renderPage() {
+      const c = document.getElementById('content');
+      switch(currentPage) {
+        case 'station': c.innerHTML = renderStationPage(); break;
+        case 'charger': c.innerHTML = renderChargerPage(); break;
+        case 'user': c.innerHTML = renderUserPage(); break;
+        case 'order': c.innerHTML = renderOrderPage(); break;
+        case 'feedback': c.innerHTML = renderFeedbackPage(); break;
+        case 'notice': c.innerHTML = renderNoticePage(); break;
+      }
+      loadData();
+    }
+
+    // ===== Station =====
+    function renderStationPage() {
+      return `
+        <div class="search-bar">
+          <input class="input" id="sKeyword" placeholder="站点名称/地址" onkeyup="if(event.key==='Enter')doSearch()" />
+          <input class="input" id="sCity" placeholder="城市" style="max-width:140px" onkeyup="if(event.key==='Enter')doSearch()" />
+          <select class="select" id="sStatus"><option value="">全部状态</option><option value="1">营业</option><option value="0">停业</option><option value="2">维护中</option></select>
+          <button class="btn btn-primary btn-sm" onclick="doSearch()">查询</button>
+          <button class="btn btn-secondary btn-sm" onclick="resetSearch()">重置</button>
+          <button class="btn btn-primary btn-sm" onclick="openAddModal()">+ 新增站点</button>
+        </div>
+        <div class="surface"><div class="table-wrap"><table>
+          <thead><tr><th>序号</th><th>站点名称</th><th>地址</th><th>城市</th><th>端口数</th><th>可用</th><th>电话</th><th>状态</th><th>操作</th></tr></thead>
+          <tbody id="tableBody"></tbody>
+        </table></div></div>
+        <div class="pagination" id="pagination"></div>`;
+    }
+
+    function renderStationRow(item, idx) {
+      const statusMap = {0:['停业','danger'],1:['营业','success'],2:['维护中','warning']};
+      const [label, cls] = statusMap[item.status] || ['未知','info'];
+      return `<tr>
+        <td>${(page.current-1)*page.size+idx+1}</td>
+        <td>${item.name||''}</td><td>${item.address||''}</td><td>${item.city||''}</td>
+        <td>${item.totalPorts||0}</td><td>${item.availablePorts||0}</td><td>${item.phone||''}</td>
+        <td><span class="tag tag-${cls}">${label}</span></td>
+        <td><button class="btn btn-tertiary btn-sm" onclick='openEditModal(${JSON.stringify(item).replace(/'/g,"\\'")})'>编辑</button>
+        <button class="btn btn-tertiary btn-sm" style="color:var(--color-danger)" onclick="doDelete('station',${item.id})">删除</button></td></tr>`;
+    }
+
+    function openAddModal() {
+      editingId = null;
+      document.getElementById('modalTitle').textContent = '新增站点';
+      document.getElementById('modalBody').innerHTML = stationForm();
+      document.getElementById('modalOverlay').classList.add('show');
+    }
+    function openEditModal(item) {
+      editingId = item.id;
+      document.getElementById('modalTitle').textContent = '编辑站点';
+      document.getElementById('modalBody').innerHTML = stationForm(item);
+      document.getElementById('modalOverlay').classList.add('show');
+    }
+    function stationForm(d={}) {
+      return `<div class="form-grid">
+        <div class="field"><label class="field-label">站点名称 *</label><input class="input" id="fName" value="${d.name||''}" /></div>
+        <div class="field"><label class="field-label">联系电话</label><input class="input" id="fPhone" value="${d.phone||''}" /></div>
+        <div class="field"><label class="field-label">详细地址 *</label><input class="input" id="fAddress" value="${d.address||''}" /></div>
+        <div class="field-half"><label class="field-label">城市 *</label><input class="input" id="fCity" value="${d.city||''}" /></div>
+        <div class="field-half"><label class="field-label">省份</label><input class="input" id="fProvince" value="${d.province||''}" /></div>
+        <div class="field-half"><label class="field-label">经度</label><input class="input" id="fLng" type="number" step="0.0000001" value="${d.longitude||''}" /></div>
+        <div class="field-half"><label class="field-label">纬度</label><input class="input" id="fLat" type="number" step="0.0000001" value="${d.latitude||''}" /></div>
+        <div class="field-half"><label class="field-label">总端口数</label><input class="input" id="fTotal" type="number" value="${d.totalPorts||0}" /></div>
+        <div class="field-half"><label class="field-label">可用端口</label><input class="input" id="fAvail" type="number" value="${d.availablePorts||0}" /></div>
+        <div class="field"><label class="field-label">状态</label>
+          <select class="select" id="fStatus"><option value="1" ${d.status===1?'selected':''}>营业</option><option value="0" ${d.status===0?'selected':''}>停业</option><option value="2" ${d.status===2?'selected':''}>维护中</option></select></div>
+      </div>`;
+    }
+    function getStationData() {
+      return { name:gv('fName'), address:gv('fAddress'), city:gv('fCity'), province:gv('fProvince'),
+        phone:gv('fPhone'), longitude:parseFloat(gv('fLng'))||null, latitude:parseFloat(gv('fLat'))||null,
+        totalPorts:parseInt(gv('fTotal'))||0, availablePorts:parseInt(gv('fAvail'))||0, status:parseInt(gv('fStatus'))||1 };
+    }
+
+    // ===== Charger =====
+    function renderChargerPage() {
+      return `
+        <div class="search-bar">
+          <input class="input" id="sStationId" placeholder="站点ID" style="max-width:120px" onkeyup="if(event.key==='Enter')doSearch()" />
+          <select class="select" id="sStatus"><option value="">全部状态</option><option value="0">离线</option><option value="1">空闲</option><option value="2">充电中</option><option value="3">故障</option></select>
+          <button class="btn btn-primary btn-sm" onclick="doSearch()">查询</button>
+          <button class="btn btn-secondary btn-sm" onclick="resetSearch()">重置</button>
+          <button class="btn btn-primary btn-sm" onclick="openAddModal()">+ 新增充电桩</button>
+        </div>
+        <div class="surface"><div class="table-wrap"><table>
+          <thead><tr><th>序号</th><th>编号</th><th>名称</th><th>站点ID</th><th>类型</th><th>功率</th><th>枪数</th><th>单价</th><th>状态</th><th>操作</th></tr></thead>
+          <tbody id="tableBody"></tbody>
+        </table></div></div>
+        <div class="pagination" id="pagination"></div>`;
+    }
+    function renderChargerRow(item, idx) {
+      const statusMap = {0:['离线','info'],1:['空闲','success'],2:['充电中','primary'],3:['故障','danger']};
+      const [label, cls] = statusMap[item.status] || ['未知','info'];
+      const typeLabel = item.type===1?'直流快充':'交流慢充';
+      return `<tr>
+        <td>${(page.current-1)*page.size+idx+1}</td>
+        <td style="font-family:var(--font-mono);font-size:0.8125rem">${item.code||''}</td>
+        <td>${item.name||''}</td><td>${item.stationId||''}</td>
+        <td><span class="tag tag-primary">${typeLabel}</span></td>
+        <td>${item.power||0} kW</td><td>${item.gunCount||0}</td><td>${item.price||0} 元</td>
+        <td><span class="tag tag-${cls}">${label}</span></td>
+        <td><button class="btn btn-tertiary btn-sm" onclick='openEditModal(${JSON.stringify(item).replace(/'/g,"\\'")})'>编辑</button>
+        <button class="btn btn-tertiary btn-sm" style="color:var(--color-danger)" onclick="doDelete('charger',${item.id})">删除</button></td></tr>`;
+    }
+    function chargerForm(d={}) {
+      return `<div class="form-grid">
+        <div class="field"><label class="field-label">编号</label><input class="input" id="fCode" value="${d.code||''}" placeholder="留空自动生成" /></div>
+        <div class="field"><label class="field-label">名称</label><input class="input" id="fName" value="${d.name||''}" /></div>
+        <div class="field-half"><label class="field-label">站点ID</label><input class="input" id="fStationId" type="number" value="${d.stationId||''}" /></div>
+        <div class="field-half"><label class="field-label">类型</label><select class="select" id="fType"><option value="1" ${d.type===1?'selected':''}>直流快充</option><option value="2" ${d.type===2?'selected':''}>交流慢充</option></select></div>
+        <div class="field-half"><label class="field-label">功率(kW)</label><input class="input" id="fPower" type="number" step="0.1" value="${d.power||60}" /></div>
+        <div class="field-half"><label class="field-label">枪数</label><input class="input" id="fGunCount" type="number" value="${d.gunCount||1}" /></div>
+        <div class="field-half"><label class="field-label">单价(元)</label><input class="input" id="fPrice" type="number" step="0.01" value="${d.price||1.2}" /></div>
+        <div class="field-half"><label class="field-label">状态</label><select class="select" id="fStatus"><option value="0" ${d.status===0?'selected':''}>离线</option><option value="1" ${d.status===1?'selected':''}>空闲</option><option value="2" ${d.status===2?'selected':''}>充电中</option><option value="3" ${d.status===3?'selected':''}>故障</option></select></div>
+      </div>`;
+    }
+    function getChargerData() {
+      return { code:gv('fCode'), name:gv('fName'), stationId:parseInt(gv('fStationId'))||null,
+        type:parseInt(gv('fType'))||1, power:parseFloat(gv('fPower'))||60, gunCount:parseInt(gv('fGunCount'))||1,
+        price:parseFloat(gv('fPrice'))||1.2, status:parseInt(gv('fStatus'))||1 };
+    }
+
+    // ===== User =====
+    function renderUserPage() {
+      return `
+        <div class="search-bar">
+          <input class="input" id="sKeyword" placeholder="昵称/手机号" onkeyup="if(event.key==='Enter')doSearch()" />
+          <button class="btn btn-primary btn-sm" onclick="doSearch()">查询</button>
+          <button class="btn btn-secondary btn-sm" onclick="resetSearch()">重置</button>
+        </div>
+        <div class="surface"><div class="table-wrap"><table>
+          <thead><tr><th>序号</th><th>昵称</th><th>手机号</th><th>余额</th><th>状态</th><th>注册时间</th><th>操作</th></tr></thead>
+          <tbody id="tableBody"></tbody>
+        </table></div></div>
+        <div class="pagination" id="pagination"></div>`;
+    }
+    function renderUserRow(item, idx) {
+      const statusLabel = item.status===1?'正常':'禁用';
+      const statusCls = item.status===1?'success':'danger';
+      return `<tr>
+        <td>${(page.current-1)*page.size+idx+1}</td>
+        <td>${item.nickname||''}</td><td>${item.phone||''}</td><td>${item.balance||0} 元</td>
+        <td><span class="tag tag-${statusCls}">${statusLabel}</span></td>
+        <td>${item.createTime||''}</td>
+        <td><button class="btn btn-tertiary btn-sm" onclick='openEditModal(${JSON.stringify(item).replace(/'/g,"\\'")})'>编辑</button>
+        <button class="btn btn-tertiary btn-sm" style="color:var(--color-danger)" onclick="doDelete('user',${item.id})">删除</button></td></tr>`;
+    }
+    function userForm(d={}) {
+      return `<div class="form-grid">
+        <div class="field"><label class="field-label">昵称</label><input class="input" id="fNickname" value="${d.nickname||''}" /></div>
+        <div class="field"><label class="field-label">手机号</label><input class="input" id="fPhone" value="${d.phone||''}" /></div>
+        <div class="field"><label class="field-label">状态</label><select class="select" id="fStatus"><option value="1" ${d.status===1?'selected':''}>正常</option><option value="0" ${d.status===0?'selected':''}>禁用</option></select></div>
+      </div>`;
+    }
+    function getUserData() {
+      return { id:editingId, nickname:gv('fNickname'), phone:gv('fPhone'), status:parseInt(gv('fStatus'))||1 };
+    }
+
+    // ===== Order =====
+    function renderOrderPage() {
+      return `
+        <div class="search-bar">
+          <input class="input" id="sKeyword" placeholder="订单号" onkeyup="if(event.key==='Enter')doSearch()" />
+          <select class="select" id="sStatus"><option value="">全部状态</option><option value="0">待支付</option><option value="1">充电中</option><option value="2">已完成</option><option value="3">已取消</option></select>
+          <button class="btn btn-primary btn-sm" onclick="doSearch()">查询</button>
+          <button class="btn btn-secondary btn-sm" onclick="resetSearch()">重置</button>
+        </div>
+        <div class="surface"><div class="table-wrap"><table>
+          <thead><tr><th>序号</th><th>订单号</th><th>用户ID</th><th>站点</th><th>充电桩</th><th>电量</th><th>金额</th><th>时长</th><th>状态</th><th>开始时间</th></tr></thead>
+          <tbody id="tableBody"></tbody>
+        </table></div></div>
+        <div class="pagination" id="pagination"></div>`;
+    }
+    function renderOrderRow(item, idx) {
+      const statusMap = {0:['待支付','warning'],1:['充电中','primary'],2:['已完成','success'],3:['已取消','info']};
+      const [label, cls] = statusMap[item.status] || ['未知','info'];
+      return `<tr>
+        <td>${(page.current-1)*page.size+idx+1}</td>
+        <td style="font-family:var(--font-mono);font-size:0.8125rem">${item.orderNo||''}</td>
+        <td>${item.userId||''}</td><td>${item.stationId||''}</td><td>${item.chargerId||''}</td>
+        <td>${item.electricity||0} kWh</td><td>${item.payAmount||0} 元</td><td>${item.duration||0} 分</td>
+        <td><span class="tag tag-${cls}">${label}</span></td><td>${item.startTime||''}</td></tr>`;
+    }
+
+    // ===== Feedback =====
+    function renderFeedbackPage() {
+      return `
+        <div class="search-bar">
+          <select class="select" id="sStatus"><option value="">全部状态</option><option value="0">待处理</option><option value="1">处理中</option><option value="2">已解决</option></select>
+          <button class="btn btn-primary btn-sm" onclick="doSearch()">查询</button>
+          <button class="btn btn-secondary btn-sm" onclick="resetSearch()">重置</button>
+        </div>
+        <div class="surface"><div class="table-wrap"><table>
+          <thead><tr><th>序号</th><th>用户ID</th><th>站点ID</th><th>内容</th><th>状态</th><th>时间</th><th>操作</th></tr></thead>
+          <tbody id="tableBody"></tbody>
+        </table></div></div>
+        <div class="pagination" id="pagination"></div>`;
+    }
+    function renderFeedbackRow(item, idx) {
+      const statusMap = {0:['待处理','warning'],1:['处理中','primary'],2:['已解决','success']};
+      const [label, cls] = statusMap[item.status] || ['未知','info'];
+      return `<tr>
+        <td>${(page.current-1)*page.size+idx+1}</td>
+        <td>${item.userId||''}</td><td>${item.stationId||''}</td>
+        <td style="max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${item.content||''}</td>
+        <td><span class="tag tag-${cls}">${label}</span></td><td>${item.createTime||''}</td>
+        <td><button class="btn btn-tertiary btn-sm" onclick='openReplyModal(${JSON.stringify(item).replace(/'/g,"\\'")})'>回复</button>
+        <button class="btn btn-tertiary btn-sm" style="color:var(--color-danger)" onclick="doDelete('feedback',${item.id})">删除</button></td></tr>`;
+    }
+    function openReplyModal(item) {
+      editingId = item.id;
+      document.getElementById('modalTitle').textContent = '回复反馈';
+      document.getElementById('modalBody').innerHTML = `
+        <div class="form-grid">
+          <div class="field"><label class="field-label">状态</label><select class="select" id="fStatus"><option value="1" ${item.status===1?'selected':''}>处理中</option><option value="2" ${item.status===2?'selected':''}>已解决</option></select></div>
+          <div class="field"><label class="field-label">回复内容</label><textarea class="textarea" id="fReply" rows="4" style="height:auto">${item.reply||''}</textarea></div>
+        </div>`;
+      document.getElementById('modalOverlay').classList.add('show');
+    }
+
+    // ===== Notice =====
+    function renderNoticePage() {
+      return `
+        <div class="search-bar">
+          <button class="btn btn-primary btn-sm" onclick="openAddModal()">+ 新增公告</button>
+        </div>
+        <div class="surface"><div class="table-wrap"><table>
+          <thead><tr><th>序号</th><th>标题</th><th>状态</th><th>创建时间</th><th>操作</th></tr></thead>
+          <tbody id="tableBody"></tbody>
+        </table></div></div>
+        <div class="pagination" id="pagination"></div>`;
+    }
+    function renderNoticeRow(item, idx) {
+      const label = item.status===1?'已发布':'下架';
+      const cls = item.status===1?'success':'info';
+      return `<tr>
+        <td>${(page.current-1)*page.size+idx+1}</td>
+        <td>${item.title||''}</td>
+        <td><span class="tag tag-${cls}">${label}</span></td><td>${item.createTime||''}</td>
+        <td><button class="btn btn-tertiary btn-sm" onclick='openEditModal(${JSON.stringify(item).replace(/'/g,"\\'")})'>编辑</button>
+        <button class="btn btn-tertiary btn-sm" style="color:var(--color-danger)" onclick="doDelete('notice',${item.id})">删除</button></td></tr>`;
+    }
+    function noticeForm(d={}) {
+      return `<div class="form-grid">
+        <div class="field"><label class="field-label">标题</label><input class="input" id="fTitle" value="${d.title||''}" /></div>
+        <div class="field"><label class="field-label">内容</label><textarea class="textarea" id="fContent" rows="6" style="height:auto">${d.content||''}</textarea></div>
+        <div class="field"><label class="field-label">状态</label><select class="select" id="fStatus"><option value="1" ${d.status===1?'selected':''}>发布</option><option value="0" ${d.status===0?'selected':''}>下架</option></select></div>
+      </div>`;
+    }
+    function getNoticeData() {
+      return { title:gv('fTitle'), content:gv('fContent'), status:parseInt(gv('fStatus'))||1 };
+    }
+
+    // ===== Auth =====
+    function getToken() { return localStorage.getItem('token') || ''; }
+    function authHeaders() { return { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + getToken() }; }
+    function checkAuth() {
+      if (!getToken()) { window.location.href = '/admin/login.html'; return false; }
+      return true;
+    }
+
+    // ===== API =====
+    async function apiFetch(url, options = {}) {
+      const res = await fetch(API + url, { ...options, headers: { ...authHeaders(), ...options.headers } });
+      if (res.status === 401) { localStorage.removeItem('token'); window.location.href = '/admin/login.html'; return null; }
+      return res;
+    }
+
+    async function loadData() {
+      const endpoints = { station:'/station/list', charger:'/admin/charger/list', user:'/admin/user/list', order:'/admin/order/list', feedback:'/admin/feedback/list', notice:'/admin/notice/list' };
+      const params = new URLSearchParams({ pageNum: page.current, pageSize: page.size, ...searchParams });
+      try {
+        const res = await apiFetch(endpoints[currentPage] + '?' + params);
+        if (!res) return;
+        const json = await res.json();
+        if (json.code === 200) {
+          const records = json.data.records || [];
+          dataList = records;
+          page.total = json.data.total || 0;
+          renderTable(records);
+          renderPagination();
+        }
+      } catch(e) { console.error(e); }
+    }
+
+    function renderTable(records) {
+      const tbody = document.getElementById('tableBody');
+      if (!records.length) { tbody.innerHTML = '<tr><td colspan="10" class="empty-state">暂无数据</td></tr>'; return; }
+      const renderers = { station:renderStationRow, charger:renderChargerRow, user:renderUserRow, order:renderOrderRow, feedback:renderFeedbackRow, notice:renderNoticeRow };
+      tbody.innerHTML = records.map((item, idx) => (renderers[currentPage])(item, idx)).join('');
+    }
+
+    function renderPagination() {
+      const totalPages = Math.ceil(page.total / page.size) || 1;
+      document.getElementById('pagination').innerHTML = `
+        <span class="page-info">共 ${page.total} 条</span>
+        <button class="btn btn-secondary btn-sm" onclick="goPage(${page.current-1})" ${page.current<=1?'disabled':''}>上一页</button>
+        <span class="page-info">${page.current} / ${totalPages}</span>
+        <button class="btn btn-secondary btn-sm" onclick="goPage(${page.current+1})" ${page.current>=totalPages?'disabled':''}>下一页</button>`;
+    }
+
+    function goPage(p) { page.current = p; loadData(); }
+
+    function doSearch() {
+      searchParams = {};
+      if (currentPage === 'station') {
+        const kw = document.getElementById('sKeyword')?.value;
+        const city = document.getElementById('sCity')?.value;
+        const st = document.getElementById('sStatus')?.value;
+        if (kw) searchParams.keyword = kw;
+        if (city) searchParams.city = city;
+        if (st !== '') searchParams.status = st;
+      } else if (currentPage === 'charger') {
+        const sid = document.getElementById('sStationId')?.value;
+        const st = document.getElementById('sStatus')?.value;
+        if (sid) searchParams.stationId = sid;
+        if (st !== '') searchParams.status = st;
+      } else if (currentPage === 'user' || currentPage === 'order') {
+        const kw = document.getElementById('sKeyword')?.value;
+        const st = document.getElementById('sStatus')?.value;
+        if (kw) searchParams.keyword = kw;
+        if (st !== '') searchParams.status = st;
+      } else if (currentPage === 'feedback') {
+        const st = document.getElementById('sStatus')?.value;
+        if (st !== '') searchParams.status = st;
+      }
+      page.current = 1;
+      loadData();
+    }
+
+    function resetSearch() { searchParams = {}; page.current = 1; renderPage(); }
+
+    // ===== Modal =====
+    function closeModal() { document.getElementById('modalOverlay').classList.remove('show'); editingId = null; }
+
+    function openAddModal() {
+      editingId = null;
+      document.getElementById('modalTitle').textContent = '新增' + getPageTitle(currentPage).replace('管理','');
+      const forms = { station:()=>stationForm(), charger:chargerForm, user:()=>userForm(), notice:noticeForm };
+      document.getElementById('modalBody').innerHTML = forms[currentPage] ? forms[currentPage]() : '<p class="t-body-sm t-secondary">暂不支持新增</p>';
+      document.getElementById('modalOverlay').classList.add('show');
+    }
+
+    function openEditModal(item) {
+      editingId = item.id;
+      document.getElementById('modalTitle').textContent = '编辑' + getPageTitle(currentPage).replace('管理','');
+      const forms = { station:stationForm, charger:chargerForm, user:userForm, notice:noticeForm };
+      document.getElementById('modalBody').innerHTML = forms[currentPage] ? forms[currentPage](item) : '';
+      document.getElementById('modalOverlay').classList.add('show');
+    }
+
+    async function submitForm() {
+      const endpoints = { station:'/station', charger:'/admin/charger', user:'/admin/user', notice:'/admin/notice', feedback:'/admin/feedback' };
+      const getData = { station:getStationData, charger:getChargerData, user:getUserData, notice:getNoticeData };
+      if (currentPage === 'feedback') {
+        const data = { id:editingId, status:parseInt(gv('fStatus'))||1, reply:gv('fReply') };
+        await apiFetch(endpoints[currentPage], { method:'PUT', body:JSON.stringify(data) });
+      } else if (getData[currentPage]) {
+        const data = getData[currentPage]();
+        if (editingId) data.id = editingId;
+        const method = editingId ? 'PUT' : 'POST';
+        await apiFetch(endpoints[currentPage], { method, body:JSON.stringify(data) });
+      }
+      closeModal();
+      loadData();
+    }
+
+    async function doDelete(type, id) {
+      if (!confirm('确定删除吗？')) return;
+      const endpoints = { station:'/station/', charger:'/admin/charger/', user:'/admin/user/', feedback:'/admin/feedback/', notice:'/admin/notice/' };
+      await apiFetch(endpoints[type] + id, { method:'DELETE' });
+      loadData();
+    }
+
+    // ===== Utils =====
+    function gv(id) { const el = document.getElementById(id); return el ? el.value : ''; }
+    function logout() { localStorage.removeItem('token'); localStorage.removeItem('admin'); window.location.href = '/admin/login.html'; }
+
+    // ===== Init =====
+    if (checkAuth()) {
+      const admin = JSON.parse(localStorage.getItem('admin') || '{}');
+      if (admin.username) document.getElementById('adminName').textContent = admin.username;
+      renderPage();
+    }
+  </script>
+</body>
+</html>

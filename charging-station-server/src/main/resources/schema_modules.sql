@@ -1,0 +1,76 @@
+-- 用户表
+CREATE TABLE IF NOT EXISTS `t_user` (
+  `id` BIGINT NOT NULL AUTO_INCREMENT,
+  `username` VARCHAR(50) DEFAULT NULL COMMENT '用户名',
+  `nickname` VARCHAR(50) DEFAULT NULL COMMENT '昵称',
+  `phone` VARCHAR(20) DEFAULT NULL COMMENT '手机号',
+  `password` VARCHAR(200) DEFAULT NULL COMMENT '密码(BCrypt加密)',
+  `avatar` VARCHAR(500) DEFAULT NULL COMMENT '头像',
+  `openid` VARCHAR(100) DEFAULT NULL COMMENT '微信openid',
+  `status` TINYINT DEFAULT 1 COMMENT '状态 0-禁用 1-正常',
+  `balance` DECIMAL(10,2) DEFAULT 0.00 COMMENT '余额',
+  `create_time` DATETIME DEFAULT CURRENT_TIMESTAMP,
+  `update_time` DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  `deleted` TINYINT DEFAULT 0,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `uk_phone` (`phone`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='用户表';
+
+-- 充电桩表
+CREATE TABLE IF NOT EXISTS `t_charger` (
+  `id` BIGINT NOT NULL AUTO_INCREMENT,
+  `station_id` BIGINT NOT NULL COMMENT '站点ID',
+  `code` VARCHAR(50) NOT NULL COMMENT '充电桩编号',
+  `name` VARCHAR(100) DEFAULT NULL COMMENT '充电桩名称',
+  `type` TINYINT DEFAULT 1 COMMENT '类型 1-直流快充 2-交流慢充',
+  `power` DECIMAL(10,2) DEFAULT NULL COMMENT '功率(kW)',
+  `gun_count` INT DEFAULT 1 COMMENT '枪数',
+  `price` DECIMAL(10,2) DEFAULT 1.20 COMMENT '单价(元/度)',
+  `image` VARCHAR(500) DEFAULT NULL COMMENT '图片',
+  `status` TINYINT DEFAULT 1 COMMENT '状态 0-离线 1-空闲 2-充电中 3-故障',
+  `create_time` DATETIME DEFAULT CURRENT_TIMESTAMP,
+  `update_time` DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  `deleted` TINYINT DEFAULT 0,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `uk_charger_code` (`code`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='充电桩表';
+
+-- 如果已有旧表，执行以下SQL升级:
+-- ALTER TABLE `t_charger` CHANGE `charger_no` `code` VARCHAR(50) NOT NULL COMMENT '充电桩编号';
+-- ALTER TABLE `t_charger` CHANGE `charger_type` `type` TINYINT DEFAULT 1 COMMENT '类型 1-直流快充 2-交流慢充';
+-- ALTER TABLE `t_charger` ADD COLUMN `name` VARCHAR(100) DEFAULT NULL COMMENT '充电桩名称' AFTER `code`;
+-- ALTER TABLE `t_charger` ADD COLUMN `gun_count` INT DEFAULT 1 COMMENT '枪数' AFTER `power`;
+-- ALTER TABLE `t_charger` ADD COLUMN `price` DECIMAL(10,2) DEFAULT 1.20 COMMENT '单价(元/度)' AFTER `gun_count`;
+-- ALTER TABLE `t_charger` ADD COLUMN `image` VARCHAR(500) DEFAULT NULL COMMENT '图片' AFTER `price`;
+
+-- 订单表(已有t_order)
+-- 故障反馈表
+CREATE TABLE IF NOT EXISTS `t_feedback` (
+  `id` BIGINT NOT NULL AUTO_INCREMENT,
+  `user_id` BIGINT DEFAULT NULL COMMENT '用户ID',
+  `station_id` BIGINT DEFAULT NULL COMMENT '站点ID',
+  `type` TINYINT DEFAULT 0 COMMENT '反馈类型 0-充电桩故障 1-充电异常 2-计费问题 3-环境问题 4-其他问题',
+  `content` TEXT COMMENT '反馈内容',
+  `images` VARCHAR(1000) DEFAULT NULL COMMENT '图片URL逗号分隔',
+  `status` TINYINT DEFAULT 0 COMMENT '状态 0-待处理 1-处理中 2-已解决',
+  `reply` TEXT COMMENT '回复内容',
+  `create_time` DATETIME DEFAULT CURRENT_TIMESTAMP,
+  `update_time` DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  `deleted` TINYINT DEFAULT 0,
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='故障反馈表';
+
+-- 如果已有旧表，执行以下SQL升级:
+-- ALTER TABLE `t_feedback` ADD COLUMN `type` TINYINT DEFAULT 0 COMMENT '反馈类型' AFTER `station_id`;
+
+-- 公告表
+CREATE TABLE IF NOT EXISTS `t_notice` (
+  `id` BIGINT NOT NULL AUTO_INCREMENT,
+  `title` VARCHAR(100) NOT NULL COMMENT '标题',
+  `content` TEXT COMMENT '内容',
+  `status` TINYINT DEFAULT 1 COMMENT '状态 0-下架 1-发布',
+  `create_time` DATETIME DEFAULT CURRENT_TIMESTAMP,
+  `update_time` DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  `deleted` TINYINT DEFAULT 0,
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='公告表';

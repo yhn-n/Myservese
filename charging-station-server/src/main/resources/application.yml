@@ -1,0 +1,63 @@
+server:
+  port: 8080
+spring:
+  profiles:
+    active: dev
+  datasource:
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    url: jdbc:mysql://localhost:3306/charging_station_v2?useUnicode=true&characterEncoding=utf8&useSSL=false&serverTimezone=Asia/Shanghai&allowPublicKeyRetrieval=true
+    username: root
+    password: 911220
+
+jackson:
+  date-format: yyyy-MM-dd HH:mm:ss
+  time-zone: Asia/Shanghai
+mybatis-plus:
+  mapper-locations: classpath:mapper/**/*.xml
+  configuration:
+    log-impl: org.apache.ibatis.logging.stdout.StdOutImpl
+    map-underscore-to-camel-case: true
+  global-config:
+    db-config:
+      id-type: auto
+# Knife4j 配置
+springdoc:
+  swagger-ui:
+    path: /swagger-ui.html
+    tags-sorter: alpha
+    operations-sorter: alpha
+  api-docs:
+    path: /v3/api-docs
+  group-configs:
+    - group: 管理端接口
+      paths-to-match: /admin/**
+      packages-to-scan: com.charging.controller.admin
+    - group: 小程序端接口
+      paths-to-match: /miniapp/**
+      packages-to-scan: com.charging.controller.miniapp
+knife4j:
+  enable: true
+  setting:
+    language: zh_cn
+# JWT 配置
+jwt:
+  secret: your-jwt-secret-key-here-must-be-at-least-256-bits
+  expiration: 86400000  # 24小时
+# AI 大模型配置
+ai:
+  provider: glm  # deepseek 或 glm
+  api-key: 4a925dde21514b159b1e2eb848b012db.5rkendWlAQMNKJOF
+  api-url: https://open.bigmodel.cn/api/paas/v4/chat/completions
+  model: glm-4
+  system-prompt: 你是一个专业的新能源充电站客服助手，可以帮助用户解答关于充电站位置、充电价格、充电流程、账户问题等方面的问题。请用友好的语气回答用户的问题。
+# 高德地图配置
+amap:
+  key: 6e5817f8c6dbb4ff5dd331df5a3f1b01
+# 微信小程序配置
+wechat:
+  miniapp:
+    # 生产环境必须换成真实的微信小程序 AppID 和 AppSecret
+    app-id: your-app-id
+    app-secret: your-app-secret
+    # 开发环境开关：true 时无需真实微信凭证即可一键登录（仅用于本地调试）
+    mock-mode: true

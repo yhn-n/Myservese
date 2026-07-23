@@ -1,0 +1,1 @@
+import{t as e}from"./request-CS5q8FRj.js";function t(t){return e.get(`/station/list`,{params:t})}function n(){return e.get(`/station/options`)}function r(t){return e.post(`/station`,t)}function i(t){return e.put(`/station`,t)}function a(t){return e.delete(`/station/${t}`)}export{i as a,t as i,a as n,n as r,r as t};

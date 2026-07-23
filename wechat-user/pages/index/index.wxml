@@ -1,0 +1,54 @@
+<view class="index-page">
+  <!-- 搜索栏 -->
+  <view class="search-bar">
+    <view class="search-input" bindtap="goSearch">
+      <text class="search-icon">🔍</text>
+      <input
+        placeholder="搜索充电站"
+        value="{{searchKeyword}}"
+        disabled
+        bindtap="goSearch"
+      />
+    </view>
+  </view>
+
+  <!-- 地图 -->
+  <map id="stationMap"
+       class="station-map"
+       latitude="{{latitude}}"
+       longitude="{{longitude}}"
+       scale="14"
+       markers="{{markers}}"
+       show-location
+       bindtap="onMapTap"
+       bindmarkertap="onMarkerTap">
+  </map>
+
+  <!-- 附近充电站列表 -->
+  <view class="station-list">
+    <view class="list-header">
+      <text class="list-title">附近充电站</text>
+      <text class="list-count">共{{stations.length}}个</text>
+    </view>
+
+    <scroll-view scroll-y class="station-scroll">
+      <view class="station-card" wx:for="{{stations}}" wx:key="id" bindtap="goStation" data-id="{{item.id}}">
+        <view class="station-info">
+          <text class="station-name">{{item.name}}</text>
+          <text class="station-address">{{item.address}}</text>
+          <view class="station-meta">
+            <text class="meta-item">可用 {{item.availablePorts}}/{{item.totalPorts}}</text>
+            <text class="meta-item {{item.status === 1 ? 'status-open' : 'status-closed'}}">
+              {{item.status === 1 ? '营业中' : '已关闭'}}
+            </text>
+          </view>
+        </view>
+        <view class="station-arrow">></view>
+      </view>
+
+      <view class="empty-tip" wx:if="{{stations.length === 0}}">
+        <text>暂无附近充电站</text>
+      </view>
+    </scroll-view>
+  </view>
+</view>

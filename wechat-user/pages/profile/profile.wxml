@@ -1,0 +1,58 @@
+<view class="profile-page">
+  <!-- 用户信息 -->
+  <view class="user-header">
+    <view class="user-info" bindtap="{{userInfo.id ? '' : 'goLogin'}}">
+      <view class="avatar">
+        <text class="avatar-lightning">⚡</text>
+      </view>
+      <view class="user-detail">
+        <text class="nickname">{{userInfo.nickname || '未登录'}}</text>
+        <text class="phone" wx:if="{{userInfo.phone}}">{{userInfo.phone}}</text>
+        <text class="login-tip" wx:if="{{!userInfo.id}}">点击登录 / 注册</text>
+      </view>
+      <text class="login-arrow" wx:if="{{!userInfo.id}}">></text>
+    </view>
+    <view class="balance-card" bindtap="goRecharge">
+      <text class="balance-label">账户余额</text>
+      <text class="balance-value">¥{{userInfo.balance || '0.00'}}</text>
+      <text class="recharge-btn">充值 ></text>
+    </view>
+  </view>
+
+  <!-- 功能菜单 -->
+  <view class="menu-section">
+    <view class="menu-item" bindtap="goPage" data-url="/pages/feedback/feedback">
+      <text class="menu-icon">💬</text>
+      <text class="menu-text">故障反馈</text>
+      <text class="menu-arrow">></text>
+    </view>
+    <view class="menu-item" bindtap="goPage" data-url="/pages/notice/notice">
+      <text class="menu-icon">📢</text>
+      <text class="menu-text">公告通知</text>
+      <text class="menu-arrow">></text>
+    </view>
+    <view class="menu-item" bindtap="goPage" data-url="/pages/ai/ai">
+      <text class="menu-icon">🤖</text>
+      <text class="menu-text">AI客服</text>
+      <text class="menu-arrow">></text>
+    </view>
+  </view>
+
+  <view class="menu-section">
+    <view class="menu-item" bindtap="showAbout">
+      <text class="menu-icon">ℹ️</text>
+      <text class="menu-text">关于我们</text>
+      <text class="menu-arrow">></text>
+    </view>
+    <view class="menu-item" bindtap="showAgreement">
+      <text class="menu-icon">📄</text>
+      <text class="menu-text">用户协议</text>
+      <text class="menu-arrow">></text>
+    </view>
+  </view>
+
+  <!-- 退出登录 -->
+  <view class="logout-area" wx:if="{{userInfo.id}}">
+    <button class="logout-btn" bindtap="handleLogout">退出登录</button>
+  </view>
+</view>

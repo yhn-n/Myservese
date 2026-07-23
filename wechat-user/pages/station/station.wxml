@@ -1,0 +1,59 @@
+<view class="station-page" wx:if="{{station}}">
+  <!-- 站点信息 -->
+  <view class="station-header">
+    <text class="station-name">{{station.name}}</text>
+    <view class="station-status {{station.status === 1 ? 'open' : 'closed'}}">
+      {{station.status === 1 ? '营业中' : '已关闭'}}
+    </view>
+  </view>
+
+  <view class="info-card">
+    <view class="info-row">
+      <text class="info-label">地址</text>
+      <text class="info-value">{{station.address}}</text>
+    </view>
+    <view class="info-row">
+      <text class="info-label">城市</text>
+      <text class="info-value">{{station.city}}</text>
+    </view>
+    <view class="info-row">
+      <text class="info-label">联系电话</text>
+      <text class="info-value" bindtap="callPhone">{{station.phone}}</text>
+    </view>
+    <view class="info-row">
+      <text class="info-label">充电桩数量</text>
+      <text class="info-value">{{station.totalPorts}}个</text>
+    </view>
+    <view class="info-row">
+      <text class="info-label">可用充电桩</text>
+      <text class="info-value highlight">{{station.availablePorts}}个</text>
+    </view>
+  </view>
+
+  <!-- 充电桩列表 -->
+  <view class="charger-section">
+    <text class="section-title">充电桩列表</text>
+    <view class="charger-list">
+      <view class="charger-item" wx:for="{{chargers}}" wx:key="id">
+        <view class="charger-info">
+          <text class="charger-no">{{item.code}}</text>
+          <text class="charger-type">{{item.type === 1 ? '直流快充' : '交流慢充'}}</text>
+          <text class="charger-power">{{item.power}}kW</text>
+          <text class="charger-price" wx:if="{{item.price}}">{{item.price}}元/度</text>
+        </view>
+        <view class="charger-status status-{{item.status}}">
+          {{item.status === 0 ? '离线' : item.status === 1 ? '空闲' : item.status === 2 ? '充电中' : '故障'}}
+        </view>
+      </view>
+      <view class="empty-tip" wx:if="{{chargers.length === 0}}">
+        <text>暂无充电桩信息</text>
+      </view>
+    </view>
+  </view>
+
+  <!-- 底部操作 -->
+  <view class="bottom-bar">
+    <button class="nav-btn" bindtap="navigateTo">导航到这里</button>
+    <button class="charge-btn" bindtap="startCharge" disabled="{{station.status !== 1}}">扫码充电</button>
+  </view>
+</view>
